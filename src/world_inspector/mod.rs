@@ -17,7 +17,7 @@ use bevy::{
         world::EntityRef,
     },
     prelude::*,
-    reflect::{TypeRegistryArc, TypeRegistryInternal},
+    reflect::TypeRegistryInternal,
     utils::HashSet,
 };
 use bevy_egui::egui::{self, Color32};
@@ -395,7 +395,7 @@ impl<'a> WorldUIContext<'a> {
 
                 let result = self.world.resource_scope(
                     |world, inspectable_registry: Mut<InspectableRegistry>| {
-                        world.resource_scope(|world, type_registry: Mut<TypeRegistryArc>| {
+                        world.resource_scope(|world, type_registry: Mut<AppTypeRegistry>| {
                             let type_registry = &*type_registry.internal.read();
 
                             // Safety: according to this function's contract, entity_location (and therefore component_ptr) are valid
