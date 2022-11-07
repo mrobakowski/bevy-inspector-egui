@@ -6,6 +6,7 @@ use pretty_type_name::pretty_type_name_str;
 
 use crate::{Context, Inspectable, InspectableRegistry};
 
+
 #[allow(missing_debug_implementations)]
 /// Bevy plugin for the inspector.
 /// See the [crate-level docs](index.html) for an example on how to use it.
@@ -70,7 +71,7 @@ pub struct InspectorWindowData {
     /// Whether the ui is currently shown
     pub visible: bool,
 }
-#[derive(Default)]
+#[derive(Default, Resource)]
 /// Can be used to control whether inspector windows are shown
 pub struct InspectorWindows(bevy::utils::HashMap<TypeId, InspectorWindowData>);
 impl InspectorWindows {
@@ -118,7 +119,7 @@ impl InspectorWindows {
 
 impl<T> Plugin for InspectorPlugin<T>
 where
-    T: Inspectable + Send + Sync + 'static,
+    T: Resource + Inspectable + Send + Sync + 'static,
 {
     fn build(&self, app: &mut App) {
         if let Some(get_value) = &self.initial_value {
@@ -131,9 +132,9 @@ where
 
         // init inspector ui and data resource
         if self.exclusive_access {
-            app.add_system(exclusive_access_ui::<T>.exclusive_system());
+            app.add_system(exclusive_access_ui::<T>);
         } else {
-            app.add_system(shared_access_ui::<T>.exclusive_system());
+            app.add_system(shared_access_ui::<T>);
         }
 
         // init egui
@@ -175,7 +176,7 @@ fn shared_access_ui<T>(
     mut egui_context: ResMut<EguiContext>,
     inspector_windows: Res<InspectorWindows>,
 ) where
-    T: Inspectable + Send + Sync + 'static,
+    T: Resource + Inspectable + Send + Sync + 'static,
 {
     let mut data = match data {
         Some(data) => data,

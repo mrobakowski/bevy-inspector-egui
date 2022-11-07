@@ -2,7 +2,7 @@ use std::ops::{Deref, DerefMut};
 
 use bevy::prelude::*;
 use bevy::reflect::{List, Map, Tuple};
-use bevy_egui::egui;
+use bevy_egui::egui::{self};
 use egui::Grid;
 
 use crate::{Context, Inspectable, InspectableRegistry};
@@ -103,6 +103,10 @@ pub fn ui_for_reflect_with_registry(
     }
 
     match value.reflect_mut() {
+        bevy::reflect::ReflectMut::Enum(_) => {
+            ui.label("<not implemented>");
+            false
+        }
         bevy::reflect::ReflectMut::Struct(s) => {
             ui_for_reflect_struct(s, ui, context, inspectable_registry)
         }

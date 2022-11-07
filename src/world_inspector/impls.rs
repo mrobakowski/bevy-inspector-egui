@@ -1,7 +1,7 @@
 use super::{WorldInspectorParams, WorldUIContext};
 use crate::Inspectable;
 use bevy::{
-    ecs::query::{Fetch, WorldQuery, WorldQueryGats},
+    ecs::query::{ReadOnlyWorldQuery, WorldQuery},
     prelude::*,
 };
 use bevy_egui::egui::CollapsingHeader;
@@ -93,6 +93,9 @@ impl Inspectable for Entity {
 /// }
 /// ```
 pub struct InspectorQuery<Q, F = ()>(PhantomData<(Q, F)>);
+unsafe impl<Q, F> Send for InspectorQuery<Q, F> {}
+unsafe impl<Q, F> Sync for InspectorQuery<Q, F> {}
+impl<Q: 'static, F: 'static> Resource for InspectorQuery<Q, F> {}
 
 impl<Q, F> Default for InspectorQuery<Q, F> {
     fn default() -> Self {
@@ -100,14 +103,14 @@ impl<Q, F> Default for InspectorQuery<Q, F> {
     }
 }
 
-type WorldQueryItem<'w, 's, Q> = <<Q as WorldQueryGats<'w>>::Fetch as Fetch<'w>>::Item;
+type WorldQueryItem<'w, Q> = <Q as WorldQuery>::Item<'w>;
 
 unsafe fn extend_lifetime<'w, 's, Q>(
-    item: &<WorldQueryItem<'static, 'static, Q> as Inspectable>::Attributes,
-) -> <WorldQueryItem<'w, 's, Q> as Inspectable>::Attributes
+    item: &<WorldQueryItem<'static, Q> as Inspectable>::Attributes,
+) -> <WorldQueryItem<'w, Q> as Inspectable>::Attributes
 where
     Q: WorldQuery,
-    for<'world, 'state> WorldQueryItem<'world, 'state, Q>: Inspectable,
+    for<'world> WorldQueryItem<'world, Q>: Inspectable,
 {
     std::mem::transmute_copy(item)
 }
@@ -115,10 +118,10 @@ where
 impl<Q: 'static, F: 'static> Inspectable for InspectorQuery<Q, F>
 where
     Q: WorldQuery,
-    F: WorldQuery,
-    for<'w, 's> WorldQueryItem<'w, 's, Q>: Inspectable,
+    F: ReadOnlyWorldQuery,
+    for<'w, 's> WorldQueryItem<'w, Q>: Inspectable,
 {
-    type Attributes = <WorldQueryItem<'static, 'static, Q> as Inspectable>::Attributes;
+    type Attributes = <WorldQueryItem<'static, Q> as Inspectable>::Attributes;
 
     fn ui(
         &mut self,
@@ -150,6 +153,7 @@ where
     }
 }
 
+#[derive(Resource)]
 /// Executes [Queries](bevy::ecs::system::Query) and displays the only result.
 ///
 /// You can use any types and filters which are allowed in regular bevy queries,
@@ -186,10 +190,10 @@ impl<Q, F> Default for InspectorQuerySingle<Q, F> {
 impl<Q, F> Inspectable for InspectorQuerySingle<Q, F>
 where
     Q: WorldQuery + 'static,
-    F: WorldQuery + 'static,
-    for<'w, 's> WorldQueryItem<'w, 's, Q>: Inspectable,
+    F: ReadOnlyWorldQuery + 'static,
+    for<'w, 's> WorldQueryItem<'w, Q>: Inspectable,
 {
-    type Attributes = <WorldQueryItem<'static, 'static, Q> as Inspectable>::Attributes;
+    type Attributes = <WorldQueryItem<'static, Q> as Inspectable>::Attributes;
 
     fn ui(
         &mut self,

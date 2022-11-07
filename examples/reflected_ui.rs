@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::{widgets::ReflectedUI, Inspectable, InspectorPlugin};
 
-#[derive(Inspectable, Default, Debug)]
+#[derive(Inspectable, Default, Debug, Resource)]
 struct Data {
     // it works for custom reflect types
     custom: ReflectedUI<MyComponent>,

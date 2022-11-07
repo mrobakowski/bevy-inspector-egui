@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::{egui, Inspectable, InspectorPlugin};
 
-#[derive(Inspectable)]
+#[derive(Inspectable, Resource)]
 struct Data {
     #[inspectable(ignore)]
     _ignored: NotInspectable,
